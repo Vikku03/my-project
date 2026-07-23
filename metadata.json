@@ -1,0 +1,6 @@
+{
+  "name": "GK Digital Studios Official Website",
+  "description": "Official website for GK Digital Studios and Govind Kumar Gella, featuring photography, cinematography, drone visuals, and secure client proofing portal.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
