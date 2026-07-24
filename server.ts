@@ -1,16 +1,13 @@
 import express from 'express';
 import path from 'path';
 import fs from 'fs';
-import { fileURLToPath } from 'url';
+import net from 'net';
 import { createServer as createViteServer } from 'vite';
 import { S3Client, PutObjectCommand, ListObjectsV2Command, DeleteObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import dotenv from 'dotenv';
 
 dotenv.config();
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // Ensure local uploads directory exists for fallback storage
 const uploadsDir = path.join(process.cwd(), 'uploads');
@@ -42,9 +39,29 @@ function getMimeType(filePath: string): string {
   }
 }
 
+function isPortAvailable(port: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    const probe = net.createServer();
+    probe.once('error', () => resolve(false));
+    probe.once('listening', () => {
+      probe.close(() => resolve(true));
+    });
+    probe.listen(port, '0.0.0.0');
+  });
+}
+
+async function findAvailablePort(startPort: number): Promise<number> {
+  let port = startPort;
+  while (!(await isPortAvailable(port))) {
+    port += 1;
+  }
+  return port;
+}
+
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const requestedPort = Number(process.env.PORT) || 3000;
+  const PORT = await findAvailablePort(requestedPort);
 
   // JSON and UrlEncoded body parsers (large limit for video/photo uploads)
   app.use(express.json({ limit: '200mb' }));
@@ -500,7 +517,14 @@ async function startServer() {
 
       // Save local fallback JSON
       const localUsersPath = path.join(uploadsDir, 'users_projects.json');
-      fs.writeFileSync(localUsersPath, jsonContent, 'utf8');
+      if (!s3Saved) {
+        const existingContent = fs.existsSync(localUsersPath)
+          ? fs.readFileSync(localUsersPath, 'utf8')
+          : '';
+        if (existingContent !== jsonContent) {
+          fs.writeFileSync(localUsersPath, jsonContent, 'utf8');
+        }
+      }
 
       return res.json({
         success: true,
@@ -558,8 +582,9 @@ async function startServer() {
 
   // --- VITE / STATIC SERVING MIDDLEWARE ---
   if (process.env.NODE_ENV !== 'production') {
+    const hmrPort = await findAvailablePort(PORT + 1);
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: { middlewareMode: true, hmr: { port: hmrPort } },
       appType: 'spa',
     });
     app.use(vite.middlewares);
@@ -572,7 +597,7 @@ async function startServer() {
   }
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on http://0.0.0.0:${PORT}`);
+    console.log(`Server running on http://localhost:${PORT}`);
   });
 }
 

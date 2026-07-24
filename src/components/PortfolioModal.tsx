@@ -62,7 +62,7 @@ export const PortfolioModal: React.FC<PortfolioModalProps> = ({
     setUploadError('');
     setIsUploading(true);
 
-    const filesArray = Array.from(files);
+    const filesArray: File[] = Array.from(files);
 
     if (filesArray.length === 1) {
       const file = filesArray[0];

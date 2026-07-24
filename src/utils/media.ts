@@ -88,6 +88,10 @@ export function resolveImageUrl(url: string): string {
   if (!url) return '';
   const cleanUrl = url.trim();
 
+  if (cleanUrl.includes('photo-1519225495810-7512c696505a')) {
+    return 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80';
+  }
+
   // 1. Amazon S3 Direct URLs -> Route through authenticated S3 Proxy Streamer so private S3 photos load seamlessly without 403 / CORS
   if (cleanUrl.includes('.s3.') && cleanUrl.includes('amazonaws.com')) {
     try {

@@ -162,7 +162,7 @@ export const PORTFOLIO: PortfolioItem[] = [
   // Pre-Weddings
   {
     id: "pre-1",
-    url: "https://images.unsplash.com/photo-1519225495810-7512c696505a?auto=format&fit=crop&w=1200&q=80",
+    url: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80",
     title: "Coastal Reverie",
     category: "Pre-Weddings",
     description: "A wide, artistic composition of a couple walking along the mist-filled beach of Visakhapatnam."
@@ -379,7 +379,7 @@ export const INITIAL_PROOFING_PROJECTS: ProofProject[] = [
       },
       {
         id: "p1-5",
-        url: "https://images.unsplash.com/photo-1519225495810-7512c696505a?auto=format&fit=crop&w=1200&q=80",
+        url: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80",
         title: "Smiles at the Reception Stage",
         selected: false,
         comment: ""

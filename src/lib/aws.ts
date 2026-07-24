@@ -42,42 +42,42 @@ export async function uploadFileToAWS(
   try {
     if (onProgress) onProgress(10);
 
-    // Read file to base64
-    const base64Data = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-
-    if (onProgress) onProgress(40);
-
-    // Call server direct upload endpoint
-    const response = await fetch('/api/s3/upload-direct', {
+    const urlResponse = await fetch('/api/s3/upload-url', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         fileName: file.name,
         fileType: file.type,
-        fileData: base64Data,
         folder
       })
     });
+    const urlData = await urlResponse.json();
+    if (!urlResponse.ok || !urlData.success || !urlData.uploadUrl) {
+      throw new Error(urlData.error || 'Failed to prepare upload');
+    }
 
-    if (onProgress) onProgress(80);
+    if (onProgress) onProgress(30);
 
-    const data = await response.json();
-    if (!data.success) {
-      throw new Error(data.error || 'Upload failed');
+    const uploadResponse = await fetch(urlData.uploadUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': file.type || 'application/octet-stream' },
+      body: file
+    });
+
+    if (!uploadResponse.ok) {
+      const responseText = await uploadResponse.text();
+      throw new Error(
+        `S3 upload failed with status ${uploadResponse.status}${responseText ? `: ${responseText.slice(0, 200)}` : ''}`
+      );
     }
 
     if (onProgress) onProgress(100);
 
     return {
       success: true,
-      url: data.publicUrl || base64Data,
-      fileKey: data.fileKey,
-      mode: data.mode
+      url: urlData.publicUrl,
+      fileKey: urlData.fileKey,
+      mode: 's3'
     };
   } catch (err: any) {
     console.error('AWS Upload Error:', err);
