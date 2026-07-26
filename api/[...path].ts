@@ -81,6 +81,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const path = getPath(req);
   const method = req.method || 'GET';
 
+  console.log("req.url =", req.url);
+  console.log("req.query =", req.query);
+
   try {
     if (path === 'health' && method === 'GET') {
       return res.json({ status: 'ok', timestamp: new Date().toISOString() });
